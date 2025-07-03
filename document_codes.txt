@@ -27,3 +27,17 @@ MR04 (Statement of satisfaction in full or in part of a charge): Filed to show t
 AD02 (Notification of single alternative inspection location - SAIL): Filed to notify Companies House of an alternative address where company records can be inspected, other than the registered office.
 RP04TM01: The RP04 prefix means "Second filing of a document". So, this is a re-filing of a TM01 form, likely to correct an error in the original.
 CC04 (Statement of company's objects): This form was used to change the section of a company's memorandum that stated the objects of the company. It's largely obsolete for companies formed under the 2006 Act.
+
+LLAP01: Appointment of member of an LLP. This form is used to officially register the appointment of a new individual person as a member of the Limited Liability Partnership.
+LLAP02: Appointment of corporate member of an LLP. This form is used to register the appointment of another company or corporate body as a member of the LLP.
+LLAA01: Change of accounting reference date. This is filed if the LLP wishes to change its financial year-end date (e.g., from 31 December to 30 April).
+LLAD01: Change of registered office address. This form is used to officially notify Companies House of a change to the LLP's registered office address.
+LLAR01: Annual Return for an LLP. The predecessor to the Confirmation Statement (CS01), used for annual filings before 2016 to confirm the LLP's details on the public record.
+LLCH01: Change of details of a member of an LLP. This is used to update the registered information of an existing LLP member, such as a change of name or service address.
+LLCS01: Confirmation Statement for an LLP. The current annual filing required to confirm that the information Companies House holds about the LLP is up-to-date.
+LLIN01: Notice of appointment of an administrator or liquidator. This is a critical form indicating an insolvency event, filed when an insolvency practitioner is appointed to manage the LLP's affairs.
+LLMG01: Particulars of a mortgage or charge for an LLP. An older form used to register a mortgage or charge against the LLP's assets. It has largely been replaced by the LLMR01 form.
+LLMR01: Particulars of a charge for an LLP. This form is filed to register a new mortgage or loan that is secured against the assets of the LLP.
+LLMR04: Statement of satisfaction of a charge for an LLP. This form is filed to notify that a charge previously registered against the LLP has been paid off in full or in part.
+LLTM01: Termination of appointment of member of an LLP. This form is used to officially register that a person has ceased to be a member of the LLP.
+AA: Annual Accounts. This is a universal code (for both LLPs and Limited Companies) indicating the filing of the firm's yearly financial statements, including the balance sheet and profit and loss account.

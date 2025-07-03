@@ -20,5 +20,10 @@ def get_codes(directory):
             codes.append(code)
         
     print(f"Found {len(codes)} codes in {directory}: {codes}")
+    return codes
 
-get_codes('01471587/filings/')
+if __name__ == "__main__":
+    directory = "OC353214/filings"  # Change this to your directory path
+    codes = get_codes(directory)
+    # Here you can call put_codes(codes) if needed
+

@@ -36,13 +36,18 @@ def extract_text_from_pdf(pdf_path):
                 text_output += line.text + "\n"
     return text_output
 
+"""
 # PDF File Path
-pdf_path = "./documents/file2.pdf"  # Replace with actual path
+pdf_path = "/Users/siddharthdileep/extracter/OC353214/filings/AA_MzA1NTY1NzAxNWFkaXF6a2N4.pdf"  # Replace with actual path
 pdf_text = extract_text_from_pdf(pdf_path)
 
 with open("./documents/extracted_text.txt", "w", encoding="utf-8") as out_file:
     out_file.write(pdf_text)
+"""
 
+pdf_text = ""
+with open("./documents/extracted_text.txt", "r", encoding="utf-8") as file:
+    pdf_text = file.read().strip()
 # Ask user question
 user_question = input("Enter your question: ")
 

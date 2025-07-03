@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 # --- Inputs ---
 load_dotenv()
 api_key = os.getenv('COMPANY_HOUSE_API_KEY') 
-company_number = '01471587'
+company_number = 'OC353214'
 headers = {"Accept": "application/json"}
 
 # --- 1. Get ALL filing history using a pagination loop ---
@@ -59,7 +59,7 @@ while True:
 print(f"✅ Finished fetching. Found {len(all_filings)} total filings for company {company_number}.")
 
 # --- 2. Process each filing ---
-os.makedirs("filings", exist_ok=True)
+os.makedirs(f"{company_number}/filings", exist_ok=True)
 
 # Now, loop through the 'all_filings' list which contains everything
 for filing in all_filings:
@@ -94,7 +94,7 @@ for filing in all_filings:
         
         # Check if the content is actually a PDF before saving
         if "application/pdf" in pdf_response.headers.get("Content-Type", ""):
-            filename = f"filings/{filing_type}_{transaction_id}.pdf"
+            filename = f"{company_number}/filings/{filing_type}_{transaction_id}.pdf"
             with open(filename, "wb") as f:
                 f.write(pdf_response.content)
             print(f"✅ Downloaded: {filename}")
