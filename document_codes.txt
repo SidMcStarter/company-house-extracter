@@ -1,0 +1,29 @@
+Annual Filings & Statements
+CS01 (Confirmation Statement): This is the modern annual filing that confirms the company's information on the public record (directors, shareholders, SIC code, etc.) is correct. It replaced the AR01.
+AR01 (Annual Return): The predecessor to the Confirmation Statement. You'll see this on older filing histories.
+363a (Annual Return): A much older version of the Annual Return form, used before the Companies Act 2006.
+AA (Annual Accounts): The yearly financial statements of the company, showing its financial performance and position.
+AUD (Auditors Report): Often filed as part of the Annual Accounts (AA), this is the independent auditor's opinion on the accounts.
+Director & Officer Changes
+AP01 (Appointment of Director): Used to appoint a new individual director.
+AP03 (Appointment of Corporate Secretary): Used to appoint a company as a secretary.
+TM01 (Termination of Appointment of Director): Used when a director leaves the company.
+TM02 (Termination of Appointment of Secretary): Used when a company secretary leaves.
+CH01 (Change of Director's Details): Filed to update a director's personal information, such as their address.
+288a (Appointment of a director or secretary): The old, pre-2006 form for appointing a director or secretary. Replaced by AP forms.
+288b (Termination of appointment of director or secretary): The old, pre-2006 form for terminating an appointment. Replaced by TM forms.
+People with Significant Control (PSC)
+PSC02 (Notice of new Relevant Legal Entity with significant control): Filed when a corporate entity becomes a PSC.
+PSC05 (Change of service address for a PSC): Used to update the service address for a person with significant control.
+PSC07 (Notice of ceasing to be a Person with Significant Control): Filed when a person or entity no longer has significant control over the company.
+Share Capital
+SH01 (Return of allotment of shares): Filed when the company issues new shares.
+SH19 (Statement of capital following a reduction of capital): Used to confirm the new capital structure after the company has reduced its share capital.
+SH20 (Notice of cancellation of shares): Filed when the company cancels shares, for example, after a share buy-back.
+CAP-SS (Statement of Capital): This isn't a standalone filing but is usually part of another form (like a CS01 or SH01) to show the current state of the company's share capital.
+Company Administration & Other Filings
+RESOLUTIONS: This indicates a special or ordinary resolution passed by the company's shareholders, such as a resolution to change the company name or articles of association.
+MR04 (Statement of satisfaction in full or in part of a charge): Filed to show that a mortgage or loan registered against the company has been paid off.
+AD02 (Notification of single alternative inspection location - SAIL): Filed to notify Companies House of an alternative address where company records can be inspected, other than the registered office.
+RP04TM01: The RP04 prefix means "Second filing of a document". So, this is a re-filing of a TM01 form, likely to correct an error in the original.
+CC04 (Statement of company's objects): This form was used to change the section of a company's memorandum that stated the objects of the company. It's largely obsolete for companies formed under the 2006 Act.
