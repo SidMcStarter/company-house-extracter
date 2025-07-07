@@ -46,12 +46,13 @@ def extract_text_pagewise_with_cache(pdf_path, ocr_json_path):
         with open(ocr_json_path, "r", encoding="utf-8") as f:
             ocr_data = json.load(f)
             # print("PRINTING OCR DATA:")
-
+        print(type(ocr_data))
+        print("OCR DATA", ocr_data)
         # Reconstruct flattened text from cached JSON
-        read_results = ocr_data.get("analyze_result", {}).get("read_results", [])
-        print(f"[CACHE] Loaded {len(read_results)} pages from cache.")
+        # read_results = ocr_data.get("analyze_result", {}).get("read_results", [])
+        print(f"[CACHE] Loaded {len(ocr_data)} pages from cache.")
         flat_text = ""
-        for page in read_results:
+        for page in ocr_data:
             print("PAGE NUMBER:", page.get("page", "?"))
             for line in page["lines"]:
                 print("LINE:", line["text"])
@@ -145,17 +146,54 @@ while True:
         break
 
     print("[INFO] Sending question to Ollama model...")
+    
+    prompt = f"""
+    You are an expert financial document analyzer.
+
+    From the following text, extract **both general and financial entities**, as well as relationships between them.
+
+    ### Your output format:
+    - Entities: a list of dictionaries. Each dictionary has:
+    - 'name': the entity name
+    - 'type': one of ['Company', 'Person', 'Organization', 'FinancialTerm', 'Amount', 'Date', 'DocumentSection', 'Other']
+
+    - Relationships: a list of dictionaries. Each dictionary has:
+    - 'source': name of the source entity
+    - 'target': name of the target entity
+    - 'type': a descriptive relationship, e.g., 'owns', 'reports', 'earns', 'has liability', 'located at', 'was audited by', etc.
+
+    ### Focus:
+    - Include **financial metrics and values** (e.g., 'Revenue', 'Net Profit', 'Total Assets') as `FinancialTerm` or `Amount` entities.
+    - Include links like:
+    - Vodafone reports Revenue
+    - Company X has Net Profit of Y
+    - Auditor Z audited Vodafone
+    - Directors signed the report
+
+    ### Input Document:
+    {pdf_text}
+
+    ### Output (JSON format):
+
+    Entities:
+    ...
+
+    Relationships:
+    ...
+    """
+
 
     response = requests.post(
         "http://localhost:11434/api/generate",
         json={
             "model": "llama3.2:latest",  # Adjust based on available models
-            "prompt": (
-                "Based on the following document content, answer the user's question.\n\n"
-                f"Document Content:\n{pdf_text}\n\n"
-                f"Question: {user_question}\nAnswer:"
-            ),
-            "stream": False
+            # "prompt": (
+            #     "Based on the following document content, answer the user's question.\n\n"
+            #     f"Document Content:\n{pdf_text}\n\n"
+            #     f"Question: {user_question}\nAnswer:"
+            # ),
+            "stream": False,
+            "prompt": prompt
         }
     )
 
