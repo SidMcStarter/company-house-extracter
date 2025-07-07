@@ -51,7 +51,7 @@ def answer_question_from_pdf_with_layoutlm(pdf_path, question):
 
 # --- Main Script Execution ---
 
-pdf_path = "/Users/siddharthdileep/extracter/OC353214/filings/AA_MzA1NTY1NzAxNWFkaXF6a2N4.pdf" 
+pdf_path = "/Users/siddharthdileep/extracter/01471587/AA_MzA0MTYzNDYxN2FkaXF6a2N4-pages.pdf"
 user_question = input("Enter your question about the document: ")
 
 answer_data = answer_question_from_pdf_with_layoutlm(pdf_path, user_question)
