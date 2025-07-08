@@ -44,9 +44,9 @@ def convert_pdf_to_json(client, from_directory, to_directory):
         print("CHECKING JSON PATH", json_path)            
         if os.path.exists(json_path):
             print(f"[CACHE] Found OCR JSON at {json_path}. Loading from cache...")
-            to_directory = to_directory[:-5]  # Remove '-json' from the end
-            to_directory += "-text"
-            extract_text_from_json(json_path, to_directory)
+            to_directory2 = to_directory[:-5]  # Remove '-json' from the end
+            to_directory2 += "-text"
+            extract_text_from_json(json_path, to_directory2)
             continue
         
         ocr_results = []
@@ -89,9 +89,9 @@ def convert_pdf_to_json(client, from_directory, to_directory):
         with open(json_path, "w", encoding="utf-8") as json_file:
             json.dump(ocr_results, json_file, indent=2)
         doc.close()
-        to_directory = to_directory[:-5]  # Remove '-json' from the end
-        to_directory += "-text"
-        extract_text_from_json(json_path, to_directory)
+        to_directory2 = to_directory[:-5]  # Remove '-json' from the end
+        to_directory2 += "-text"
+        extract_text_from_json(json_path, to_directory2)
     return True
 
 def extract_text_from_json(json_path, to_directory):
@@ -120,7 +120,7 @@ def extract_text_from_json(json_path, to_directory):
 
 if __name__ == "__main__":
     company_number = "01471587"
-    directory = "test_directory"
+    directory = "shortened-filings"
     
     from_directory = f"{company_number}/{directory}"
     to_directory = f"{company_number}/{directory}-json"
