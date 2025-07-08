@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 # --- Inputs ---
 load_dotenv()
 api_key = os.getenv('COMPANY_HOUSE_API_KEY') 
-company_number = 'OC353214'
+company_number = '01471587'  
 headers = {"Accept": "application/json"}
 
 # --- 1. Get ALL filing history using a pagination loop ---
@@ -94,7 +94,8 @@ for filing in all_filings:
         
         # Check if the content is actually a PDF before saving
         if "application/pdf" in pdf_response.headers.get("Content-Type", ""):
-            filename = f"{company_number}/filings/{filing_type}_{transaction_id}.pdf"
+            safe_filing_type = filing_type.replace("/", "_") if filing_type else "UNKNOWN"
+            filename = f"{company_number}/filings/{safe_filing_type}_{transaction_id}.pdf"
             with open(filename, "wb") as f:
                 f.write(pdf_response.content)
             print(f"✅ Downloaded: {filename}")

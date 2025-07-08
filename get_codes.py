@@ -13,17 +13,19 @@ def get_codes(directory):
     """
     files = [f for f in listdir(directory) if isfile(join(directory, f))]
     print(f"Total files in {directory}: {len(files)}")
-    codes = []
+    codes = {}
     for file in files:
         code = file.split('_')[0]
         if code not in codes:
-            codes.append(code)
+            codes[code] = 1
+        else:
+            codes[code] += 1
         
     print(f"Found {len(codes)} codes in {directory}: {codes}")
     return codes
 
 if __name__ == "__main__":
-    directory = "OC353214/filings"  # Change this to your directory path
+    directory = "01471587/filings"  # Change this to your directory path
     codes = get_codes(directory)
     # Here you can call put_codes(codes) if needed
 
