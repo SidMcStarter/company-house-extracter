@@ -55,4 +55,4 @@ if search and company_name:
 for key, value in st.session_state.items():
     if value is True and key.isnumeric():
         st.session_state["selected_company_number"] = key
-        st.switch_page("pages/ViewPDF.py", )
+        st.switch_page("pages/ViewFiles.py", )
