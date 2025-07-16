@@ -1,6 +1,6 @@
 from neo4j import GraphDatabase
 from dotenv import load_dotenv
-from get_codes import get_codes
+from utils.get_codes import get_codes
 import os
 
 # Load environment variables

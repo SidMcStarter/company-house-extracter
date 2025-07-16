@@ -1,5 +1,5 @@
 import os, random
-from get_codes import get_codes
+from utils.get_codes import get_codes
 
 if __name__ == "__main__":
     directory = "01471587/filings"
