@@ -1,11 +1,15 @@
 import streamlit as st
 import base64
 import os
-from pdf_to_knowledge_final import convert_pdf_to_json, extract_text_from_json, load_azure_credentials
+import streamlit.components.v1 as components  
+from pdf_to_knowledge_final import convert_pdf_to_json, extract_text_from_json, load_azure_credentials, convert_pdf_file_to_json
 from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from azure.cognitiveservices.vision.computervision.models import OperationStatusCodes
 from msrest.authentication import CognitiveServicesCredentials
+from utils.graph_ingest import ingest_text_to_neo4j
+from graphs.display_graph import generate_graph_html
 from dotenv import load_dotenv
+import asyncio
 import requests
 import time
 import io
@@ -13,7 +17,19 @@ import json
 import fitz  # PyMuPDF
 import pathlib
 
-st.set_page_config(layout="wide")
+
+# helper functions
+def display_graph_in_streamlit(neo4j_uri=None, neo4j_user=None, neo4j_password=None):
+    """Generate and display Neo4j graph in Streamlit"""
+    # Generate the graph HTML
+    graph_path = generate_graph_html(neo4j_uri, neo4j_user, neo4j_password)
+    
+    # Display the HTML file in Streamlit
+    with open(graph_path, 'r', encoding='utf-8') as f:
+        html_content = f.read()
+    
+    # Use the HTML component to display the graph
+    components.html(html_content, height=600)
 
 st.write(st.session_state)
 
@@ -90,23 +106,38 @@ with st.container():
         st.subheader("📊 Graph View")
         company_number = st.session_state.get("selected_company_number")
         if pdf_file and os.path.exists(pdf_file) and company_number:
-            st.info(f"Generating graph visualization for: {os.path.basename(pdf_file)}")
-            # Placeholder for your graph rendering code
             try:
                 AZURE_KEY, AZURE_ENDPOINT = load_azure_credentials()
                 client = ComputerVisionClient(AZURE_ENDPOINT, CognitiveServicesCredentials(AZURE_KEY))
                 
                 # Define directories
-                from_directory = os.path.dirname(pdf_file)
+                pdf_file_path = pdf_file
                 to_directory = f"{company_number}/filings-json"
                 
+                to_directory_txt = f"{company_number}/filings-text"
+                text_file_name = os.path.basename(pdf_file).replace('.pdf', '.txt')
+                text_file_path = to_directory_txt + "/" + text_file_name
+                
                 # Extract JSON from PDF
-                st.info(f"Extracting JSON from: {os.path.basename(pdf_file)}")
-                convert_pdf_to_json(client, from_directory, to_directory)
-            except:
-                pass
+                with st.spinner(f"Extracting JSON from: {os.path.basename(pdf_file)}"):
+                    convert_pdf_file_to_json(client, pdf_file_path, to_directory)
+                
+                if not os.path.exists(text_file_path):
+                    st.error(f"Text file not found: {text_file_path}")
+                else:
+                    # Process text and display graph
+                    with st.spinner(f"Processing text and generating graph..."):
+                        asyncio.run(ingest_text_to_neo4j(text_file_path=text_file_path))
+                    
+                    st.success("Graph generated successfully!")
+                    display_graph_in_streamlit(os.getenv("NEO4J_URI"), os.getenv("NEO4J_USERNAME"), os.getenv("NEO4J_PASSWORD"))
+                    
+            except Exception as e:
+                st.error(f"Error generating graph: {str(e)}")
         else:
-            st.error("No PDF file selected or file does not exist.")
+            st.error("No PDF file selected or company number not provided.")
+            if not company_number:
+                st.warning("Please select a company number.")
 
     elif view == "text":
         st.subheader("📝 Extracted Text")
@@ -124,3 +155,4 @@ with st.container():
             st.json({"filename": os.path.basename(pdf_file), "status": "pending extraction"})
         else:
             st.error("No PDF file selected or file does not exist.")
+            

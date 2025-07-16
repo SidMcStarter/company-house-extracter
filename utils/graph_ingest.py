@@ -2,12 +2,13 @@ from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_core.documents import Document
 from langchain_openai import ChatOpenAI
 from langchain_neo4j import Neo4jGraph
+import os
 
 async def ingest_text_to_neo4j(
     text_file_path: str,
-    neo4j_uri: str,
-    neo4j_user: str,
-    neo4j_password: str,
+    neo4j_uri: str = os.getenv("NEO4J_URI"),
+    neo4j_user: str = os.getenv("NEO4J_USER"),
+    neo4j_password: str = os.getenv("NEO4J_PASSWORD"),
     llm_model: str = "gpt-4o-mini"
 ):
     # Read the document
