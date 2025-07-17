@@ -19,10 +19,16 @@ import pathlib
 
 
 # helper functions
-def display_graph_in_streamlit(neo4j_uri=None, neo4j_user=None, neo4j_password=None):
+def display_graph_in_streamlit(neo4j_uri=None, neo4j_user=None, neo4j_password=None, company_number=None, file_name=None):
     """Generate and display Neo4j graph in Streamlit"""
     # Generate the graph HTML
-    graph_path = generate_graph_html(neo4j_uri, neo4j_user, neo4j_password)
+    graph_path = f"{company_number}/graphs/{file_name}_graph.html"
+    print("GRAPH PATH", graph_path)
+    if os.path.exists(graph_path):
+        st.info(f"Graph for {company_number} already exists. Displaying the graph.")
+    
+    else:
+        graph_path = generate_graph_html(neo4j_uri, neo4j_user, neo4j_password, company_number, file_name)
     
     # Display the HTML file in Streamlit
     with open(graph_path, 'r', encoding='utf-8') as f:
@@ -104,40 +110,51 @@ with st.container():
 
     elif view == "graph":
         st.subheader("📊 Graph View")
+        
         company_number = st.session_state.get("selected_company_number")
-        if pdf_file and os.path.exists(pdf_file) and company_number:
-            try:
-                AZURE_KEY, AZURE_ENDPOINT = load_azure_credentials()
-                client = ComputerVisionClient(AZURE_ENDPOINT, CognitiveServicesCredentials(AZURE_KEY))
-                
-                # Define directories
-                pdf_file_path = pdf_file
-                to_directory = f"{company_number}/filings-json"
-                
-                to_directory_txt = f"{company_number}/filings-text"
-                text_file_name = os.path.basename(pdf_file).replace('.pdf', '.txt')
-                text_file_path = to_directory_txt + "/" + text_file_name
-                
-                # Extract JSON from PDF
-                with st.spinner(f"Extracting JSON from: {os.path.basename(pdf_file)}"):
-                    convert_pdf_file_to_json(client, pdf_file_path, to_directory)
-                
-                if not os.path.exists(text_file_path):
-                    st.error(f"Text file not found: {text_file_path}")
-                else:
-                    # Process text and display graph
-                    with st.spinner(f"Processing text and generating graph..."):
-                        asyncio.run(ingest_text_to_neo4j(text_file_path=text_file_path))
-                    
-                    st.success("Graph generated successfully!")
-                    display_graph_in_streamlit(os.getenv("NEO4J_URI"), os.getenv("NEO4J_USERNAME"), os.getenv("NEO4J_PASSWORD"))
-                    
-            except Exception as e:
-                st.error(f"Error generating graph: {str(e)}")
+        file_name = os.path.basename(pdf_file).replace('.pdf', '') if pdf_file else "default_graph"
+        st.write(f"Displaying graph for company: {company_number} with file name: {file_name}")
+        #check if the graph for the company already exists
+        path = f"{company_number}/graphs/{file_name}_graph.html"
+        
+        if os.path.exists(path):
+            display_graph_in_streamlit(os.getenv("NEO4J_URI"), os.getenv("NEO4J_USERNAME"), os.getenv("NEO4J_PASSWORD"), company_number=company_number, file_name=file_name)
         else:
-            st.error("No PDF file selected or company number not provided.")
-            if not company_number:
-                st.warning("Please select a company number.")
+            if pdf_file and os.path.exists(pdf_file) and company_number:
+                try:
+                    AZURE_KEY, AZURE_ENDPOINT = load_azure_credentials()
+                    client = ComputerVisionClient(AZURE_ENDPOINT, CognitiveServicesCredentials(AZURE_KEY))
+                    
+                    # Define directories
+                    pdf_file_path = pdf_file
+                    to_directory = f"{company_number}/filings-json"
+                    
+                    to_directory_txt = f"{company_number}/filings-text"
+                    text_file_name = os.path.basename(pdf_file).replace('.pdf', '.txt')
+                    text_file_path = to_directory_txt + "/" + text_file_name
+                    
+                    # Extract JSON from PDF
+                    with st.spinner(f"Extracting JSON from: {os.path.basename(pdf_file)}"):
+                        convert_pdf_file_to_json(client, pdf_file_path, to_directory)
+                    
+                    if not os.path.exists(text_file_path):
+                        st.error(f"Text file not found: {text_file_path}")
+                    else:
+                        # Process text and display graph
+                        with st.spinner(f"Processing text and generating graph..."):
+                            asyncio.run(ingest_text_to_neo4j(text_file_path=text_file_path))
+                        
+                        st.success("Graph generated successfully!")
+                        st.write(f"Displaying graph for company: {company_number} with file name: {file_name}")
+
+                        display_graph_in_streamlit(os.getenv("NEO4J_URI"), os.getenv("NEO4J_USERNAME"), os.getenv("NEO4J_PASSWORD"), company_number=company_number, file_name=file_name)
+                        
+                except Exception as e:
+                    st.error(f"Error generating graph: {str(e)}")
+            else:
+                st.error("No PDF file selected or company number not provided.")
+                if not company_number:
+                    st.warning("Please select a company number.")
 
     elif view == "text":
         st.subheader("📝 Extracted Text")

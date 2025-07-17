@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 
 
-def generate_graph_html(NEO4J_URI=None, NEO4J_USER=None, NEO4J_PASSWORD=None):
+def generate_graph_html(NEO4J_URI=None, NEO4J_USER=None, NEO4J_PASSWORD=None, company_name = None, file_name=None):
     net = Network(height="600px", width="100%", notebook=False)
     net.force_atlas_2based()
 
@@ -72,7 +72,8 @@ def generate_graph_html(NEO4J_URI=None, NEO4J_USER=None, NEO4J_PASSWORD=None):
     }
     """)
 
-    temp_path = "./temp_graph.html"
+    temp_path = f"{company_name}/graphs/{file_name}_graph.html"
+    os.makedirs(os.path.dirname(temp_path), exist_ok=True)
     net.save_graph(temp_path)
     return temp_path
 
