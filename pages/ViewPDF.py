@@ -43,6 +43,9 @@ st.write(st.session_state)
 if "active_view" not in st.session_state:
     st.session_state.active_view = "pdf"  # default to PDF Viewer
 
+# setup default messages state
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 # ------------------------------
 # Navigation Bar
 # ------------------------------
@@ -73,8 +76,8 @@ with st.container():
 
     with nav_col3:
         st.markdown('<div class="uniform-button">', unsafe_allow_html=True)
-        if st.button("Extract Text", key="btn_text", use_container_width=True):
-            st.session_state.active_view = "text"
+        if st.button("Chat", key="btn_text", use_container_width=True):
+            st.session_state.active_view = "chat"
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -156,13 +159,25 @@ with st.container():
                 if not company_number:
                     st.warning("Please select a company number.")
 
-    elif view == "text":
-        st.subheader("📝 Extracted Text")
-        if pdf_file and os.path.exists(pdf_file):
-            st.info(f"Extracting text from: {os.path.basename(pdf_file)}")
-            # Placeholder for your text extraction code
-        else:
-            st.error("No PDF file selected or file does not exist.")
+    elif view == "chat":
+        file_name = os.path.basename(pdf_file).replace('.pdf', '') if pdf_file else "default_graph"
+        # st.subheader("📝 Chat with PDF")
+        left_col, right_col = st.columns([1, 1])
+
+        with left_col:
+            st.subheader("📄 PDF Viewer")
+            if pdf_file and os.path.exists(pdf_file):
+                with open(pdf_file, "rb") as f:
+                    pdf_bytes = f.read()
+                b64_pdf = base64.b64encode(pdf_bytes).decode("utf-8")
+                pdf_display = f'<iframe src="data:application/pdf;base64,{b64_pdf}" width="100%" height="900px" type="application/pdf"></iframe>'
+                st.markdown(pdf_display, unsafe_allow_html=True)
+            else:
+                st.error("No PDF file selected or file does not exist.")
+
+        with right_col:
+            st.subheader("📝 Chat with PDF")
+            
 
     elif view == "":
         st.subheader("🧾 Extracted JSON")
