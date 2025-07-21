@@ -24,7 +24,15 @@ async def ingest_text_to_neo4j(
 
     # Convert to graph documents (async)
     graph_documents = await graph_transformer.aconvert_to_graph_documents(documents)
-
+    
+    file_name = os.path.basename(text_file_path)
+    for gd in graph_documents:
+        for node in gd.nodes:
+            if hasattr(node, "properties"):
+                node.properties["source_file"] = file_name  # or text_file_path
+        for rel in gd.relationships:
+            if hasattr(rel, "properties"):
+                rel.properties["source_file"] = file_name
     # Store in Neo4j
     graph = Neo4jGraph(
         url=neo4j_uri,
