@@ -7,32 +7,37 @@ from dotenv import load_dotenv
 
 
 def generate_graph_html(NEO4J_URI=None, NEO4J_USER=None, NEO4J_PASSWORD=None, company_name = None, file_name=None):
+    print("Generating graph HTML...", file_name)
     net = Network(height="600px", width="100%", notebook=False)
     net.force_atlas_2based()
 
     driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
     with driver.session() as session:
-        result = session.run("MATCH (a)-[r]->(b) RETURN a, r, b LIMIT 100")
+        if file_name:
+            result = session.run(
+                """
+                MATCH (a)-[r]->(b)
+                WHERE a.source_file = $file OR b.source_file = $file OR r.source_file = $file
+                RETURN a, r, b LIMIT 100
+                """,
+                file=file_name + ".txt"
+            )
+        else:
+            result = session.run("MATCH (a)-[r]->(b) RETURN a, r, b LIMIT 100")
         for record in result:
             a = record["a"]
             b = record["b"]
             r = record["r"]
-            
-            # Create better labels for nodes
+
             a_label = f"{next(iter(a.labels))}: {a.get('id', a.id)}"
             b_label = f"{next(iter(b.labels))}: {b.get('id', b.id)}"
-            
-            # Create detailed title tooltips with all properties and labels
             a_title = f"Labels: {', '.join(a.labels)}<br>Properties: {dict(a)}"
             b_title = f"Labels: {', '.join(b.labels)}<br>Properties: {dict(b)}"
-            
-            # Add nodes with enhanced labels and titles
             net.add_node(a.id, label=a_label, title=a_title)
             net.add_node(b.id, label=b_label, title=b_title)
-            
-            # Add edge with relationship type
             net.add_edge(a.id, b.id, label=r.type)
-    
+            
+
     driver.close()
 
     # Add some styling options

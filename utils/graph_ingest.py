@@ -3,7 +3,8 @@ from langchain_core.documents import Document
 from langchain_openai import ChatOpenAI
 from langchain_neo4j import Neo4jGraph
 import os
-
+from langchain_openai import OpenAIEmbeddings
+from langchain_neo4j import Neo4jVector
 async def ingest_text_to_neo4j(
     text_file_path: str,
     neo4j_uri: str = os.getenv("NEO4J_URI"),
@@ -41,6 +42,20 @@ async def ingest_text_to_neo4j(
         refresh_schema=True,
     )
     graph.add_graph_documents(graph_documents, baseEntityLabel=True, include_source=True)
+    
+    # Create embeddings and vector index
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    vector_index = Neo4jVector.from_existing_graph(
+        embeddings,
+        url=neo4j_uri,
+        username=neo4j_user,
+        password=neo4j_password,
+        node_label="Document",  # or your node label
+        text_node_properties=["text"],  # or your property name
+        embedding_node_property="embedding",
+    )
+    vector_index.add_documents(documents)
+    
     return graph_documents
 
 if __name__ == "__main__":
