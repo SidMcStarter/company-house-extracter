@@ -16,6 +16,9 @@ import io
 import json
 import fitz  # PyMuPDF
 import pathlib
+from langchain_neo4j import Neo4jVector
+from langchain_openai import OpenAIEmbeddings
+from utils.chat import answer_with_hybrid_retrieval
 
 
 # helper functions
@@ -36,6 +39,33 @@ def display_graph_in_streamlit(neo4j_uri=None, neo4j_user=None, neo4j_password=N
     
     # Use the HTML component to display the graph
     components.html(html_content, height=600)
+    
+def load_response(query):
+    """Load graph from Neo4j database"""
+    load_dotenv()
+    NEO4J_URI = os.getenv("NEO4J_URI")
+    NEO4J_USERNAME = os.getenv("NEO4J_USERNAME")
+    NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
+    
+    vector_index = Neo4jVector.from_existing_graph(
+        url=NEO4J_URI,
+        username=NEO4J_USERNAME,
+        password=NEO4J_PASSWORD,
+        embedding=OpenAIEmbeddings(model="text-embedding-3-small"),
+        node_label="Document",
+        text_node_properties=["text"],
+        embedding_node_property="embedding",
+    )
+    
+    response = answer_with_hybrid_retrieval(
+                    query=query,
+                    neo4j_uri=NEO4J_URI,
+                    neo4j_username=NEO4J_USERNAME,
+                    neo4j_password=NEO4J_PASSWORD,
+                    vector_index=vector_index,
+                    llm_model="gpt-4o-mini"
+                )
+    return response
 
 st.write(st.session_state)
 
@@ -177,6 +207,18 @@ with st.container():
 
         with right_col:
             st.subheader("📝 Chat with PDF")
+            query = st.text_input("Ask a question about the PDF:")
+            if query:
+                if pdf_file and os.path.exists(pdf_file):
+                    try:
+                        response = load_response(query)
+                        st.write("Response:", response)
+                    except Exception as e:
+                        st.error(f"Error processing query: {str(e)}")
+                else:
+                    st.error("No PDF file selected or file does not exist.")
+            else:
+                st.info("Please enter a query to get started.")
             
 
     elif view == "":
