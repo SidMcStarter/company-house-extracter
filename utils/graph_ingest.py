@@ -21,12 +21,13 @@ async def ingest_text_to_neo4j(
     graph_transformer = LLMGraphTransformer(llm=llm, node_properties=True)
 
     pages = text.split("--- End of Page")
-    documents = [Document(page_content=page.strip()) for page in pages if page.strip()]
+    file_name = os.path.basename(text_file_path)
+
+    documents = [Document(page_content=page.strip(), metadata={"source_file": file_name}) for page in pages if page.strip()]
 
     # Convert to graph documents (async)
     graph_documents = await graph_transformer.aconvert_to_graph_documents(documents)
     
-    file_name = os.path.basename(text_file_path)
     for gd in graph_documents:
         for node in gd.nodes:
             if hasattr(node, "properties"):

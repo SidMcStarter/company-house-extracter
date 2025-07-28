@@ -40,13 +40,13 @@ def display_graph_in_streamlit(neo4j_uri=None, neo4j_user=None, neo4j_password=N
     # Use the HTML component to display the graph
     components.html(html_content, height=600)
     
-def load_response(query):
+def load_response(query, file_name = None):
     """Load graph from Neo4j database"""
     load_dotenv()
     NEO4J_URI = os.getenv("NEO4J_URI")
     NEO4J_USERNAME = os.getenv("NEO4J_USERNAME")
     NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
-    
+        
     vector_index = Neo4jVector.from_existing_graph(
         url=NEO4J_URI,
         username=NEO4J_USERNAME,
@@ -55,6 +55,7 @@ def load_response(query):
         node_label="Document",
         text_node_properties=["text"],
         embedding_node_property="embedding",
+        search_type="vector",
     )
     
     response = answer_with_hybrid_retrieval(
@@ -63,7 +64,8 @@ def load_response(query):
                     neo4j_username=NEO4J_USERNAME,
                     neo4j_password=NEO4J_PASSWORD,
                     vector_index=vector_index,
-                    llm_model="gpt-4o-mini"
+                    llm_model="gpt-4o-mini",
+                    source_file=file_name
                 )
     return response
 
@@ -211,7 +213,10 @@ with st.container():
             if query:
                 if pdf_file and os.path.exists(pdf_file):
                     try:
-                        response = load_response(query)
+                        flie_name = os.path.basename(pdf_file)
+                        if ".txt" not in file_name:
+                            file_name = f"{file_name}.txt" 
+                        response = load_response(query, file_name)
                         st.write("Response:", response)
                     except Exception as e:
                         st.error(f"Error processing query: {str(e)}")

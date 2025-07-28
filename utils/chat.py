@@ -89,7 +89,7 @@ class HybridRetrieval(Chain):
     
     @property
     def input_keys(self) -> List[str]:
-        return ["query"]
+        return ["query", "source_file"]
     
     @property
     def output_keys(self) -> List[str]:
@@ -97,16 +97,32 @@ class HybridRetrieval(Chain):
     
     def _call(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
         question = inputs["query"]
+        #optionally get the source file
+        source_file = inputs.get("source_file")
         
+        # for source file provided, change the query by a little
+        if source_file:
+            graph_question = (
+                f"Only consider nodes where source_file = '{source_file}'.\n\n"
+                f"{question}"
+            )
+        else:
+            graph_question = question
+            
         try:
             # Get results from the Cypher QA chain
-            graph_result = self.graph_chain.invoke(question)
+            graph_result = self.graph_chain.invoke(graph_question)
             graph_text = graph_result.get('result', "No graph results found")
         except Exception as e:
             graph_text = f"Graph query error: {str(e)[:100]}"
         
         # Get results from the vector retriever
-        vector_docs = self.vector_index.similarity_search(question, k=3)
+        if source_file:
+            vector_docs = self.vector_index.similarity_search(
+                question, k=3, filter={"source_file": source_file}
+            )
+        else:
+            vector_docs = self.vector_index.similarity_search(question, k=3)
         vector_result = "\n\n".join([doc.page_content for doc in vector_docs])
         
         # Combine the results into a single string
@@ -141,12 +157,13 @@ Question: {question}
     prompt = ChatPromptTemplate.from_template(template)
     
     # Define the chain
-    final_rag_chain = {
-        "context": lambda x: hybrid_retriever.invoke(x)["result"],
-        "question": lambda x: x
-    } | prompt | ChatOpenAI(temperature=0, model=llm_model) | StrOutputParser()
+    final_chain = {
+        # pass the whole inputs dict ({'question':…, 'source_file':…})
+        "context": lambda inputs: hybrid_retriever.invoke(inputs)["result"],
+        "question": lambda inputs: inputs["query"],
+    } | prompt | ChatOpenAI(temperature=0, model_name=llm_model) | StrOutputParser()
     
-    return final_rag_chain
+    return final_chain
 
 def answer_with_hybrid_retrieval(
     query, 
@@ -154,7 +171,8 @@ def answer_with_hybrid_retrieval(
     neo4j_username, 
     neo4j_password, 
     vector_index, 
-    llm_model="gpt-4o-mini"
+    llm_model="gpt-4o-mini",
+    source_file=None
 ):
     """
     Process a query using hybrid retrieval (graph + vector) and return the response.
@@ -177,7 +195,10 @@ def answer_with_hybrid_retrieval(
     rag_chain = create_hybrid_rag_chain(graph_chain, vector_index, llm_model)
     
     # Run the chain and return the result
-    return rag_chain.invoke(query)
+    return rag_chain.invoke({
+        "query":       query,
+        "source_file": source_file
+    })
 
 if __name__ == "__main__":
     # Test the hybrid retrieval function
@@ -196,13 +217,22 @@ if __name__ == "__main__":
     
     # Test queries with broader scope
     test_queries = [
-        "What entities or organizations appear in the documents?",
-        "Extract any numerical values or financial information mentioned",
-        "Identify any people, roles, or relationships described in the content"
+        "What is this document about",
     ]
     
     # Connect to Neo4j for vector search
     print("Creating vector index...")
+    vector_index = Neo4jVector.from_existing_graph(
+        OpenAIEmbeddings(),
+        url=NEO4J_URI,
+        username=NEO4J_USERNAME,
+        password=NEO4J_PASSWORD,
+        node_label="Document",
+        text_node_properties=["text"],
+        embedding_node_property="embedding",
+    )
+    print(vector_index.similarity_search("what is this document about", k=3, filter={"source_file": "TM01_MzA4ODM3NDQxOGFkaXF6a2N4.txt"}))
+    """
     try:
         vector_index = Neo4jVector.from_existing_graph(
             OpenAIEmbeddings(),
@@ -213,6 +243,7 @@ if __name__ == "__main__":
             text_node_properties=["text"],
             embedding_node_property="embedding",
         )
+        
         
         # Test each query
         for query in test_queries:
@@ -225,7 +256,8 @@ if __name__ == "__main__":
                     neo4j_username=NEO4J_USERNAME,
                     neo4j_password=NEO4J_PASSWORD,
                     vector_index=vector_index,
-                    llm_model="gpt-4o-mini"
+                    llm_model="gpt-4o-mini",
+                    source_file="TM01_MzA4ODM3NDQxOGFkaXF6a2N4.txt"  # Example file name, adjust as needed
                 )
                 
                 print("\nResponse:")
@@ -240,4 +272,4 @@ if __name__ == "__main__":
         print(f"Error setting up vector index: {e}")
         import traceback
         traceback.print_exc()
-
+    """
