@@ -130,15 +130,48 @@ with st.container():
 
     if view == "pdf":
         st.subheader("📄 PDF Viewer")
+        company_number = st.session_state.get("selected_company_number")
+        pdf_file = st.session_state.get("selected_file")
         if pdf_file and os.path.exists(pdf_file):
-            try:
-                with open(pdf_file, "rb") as f:
-                    pdf_bytes = f.read()
-                b64_pdf = base64.b64encode(pdf_bytes).decode("utf-8")
-                pdf_display = f'<iframe src="data:application/pdf;base64,{b64_pdf}" width="100%" height="900px" type="application/pdf"></iframe>'
-                st.markdown(pdf_display, unsafe_allow_html=True)
-            except Exception as e:
-                st.error(f"Error displaying PDF: {e}")
+            file_name = os.path.basename(pdf_file)
+            markdown_path = f"{company_number}/markdown/{file_name[:-4]}.md"
+            if os.path.exists(markdown_path):
+                left_col, right_col = st.columns([1,1])
+               
+                #open the pdf on the left
+                with left_col:
+                    try:
+                        with open(pdf_file, "rb") as f:
+                            pdf_bytes = f.read()
+                        b64_pdf = base64.b64encode(pdf_bytes).decode("utf-8")
+                        pdf_display = f'<iframe src="data:application/pdf;base64,{b64_pdf}" width="100%" height="900px" type="application/pdf"></iframe>'
+                        st.markdown(pdf_display, unsafe_allow_html=True)
+                    except Exception as e:
+                        st.error(f"Error displaying PDF: {e}")
+                with right_col:
+                    st.subheader("📄 Markdown Viewer")
+                    try:
+                        with open(markdown_path, "r", encoding="utf-8") as f:
+                            markdown_content = f.read()
+                        # making markdown in a scrolldown format
+                        scrollable_markdown = f"""
+                    <div style="height: 900px; overflow-y: auto; padding-right: 15px; border: 1px solid #e6e6e6; border-radius: 5px;">
+                        {markdown_content}
+                    </div>
+                    """
+                        st.markdown(scrollable_markdown, unsafe_allow_html=True)
+                    except Exception as e:
+                        st.error(f"Error displaying Markdown: {e}")
+            else:
+                if pdf_file and os.path.exists(pdf_file):
+                    try:
+                        with open(pdf_file, "rb") as f:
+                            pdf_bytes = f.read()
+                        b64_pdf = base64.b64encode(pdf_bytes).decode("utf-8")
+                        pdf_display = f'<iframe src="data:application/pdf;base64,{b64_pdf}" width="100%" height="900px" type="application/pdf"></iframe>'
+                        st.markdown(pdf_display, unsafe_allow_html=True)
+                    except Exception as e:
+                        st.error(f"Error displaying PDF: {e}")
         else:
             st.error("No PDF file selected or file does not exist.")
             st.info("Please select a PDF file from the sidebar.")
