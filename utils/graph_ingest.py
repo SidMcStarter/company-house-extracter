@@ -15,6 +15,8 @@ async def ingest_text_to_neo4j(
     # Read the document
     with open(text_file_path, "r", encoding="utf-8") as f:
         text = f.read()
+        
+    print("Entering ingest_text_to_neo4j function")
 
     # Prepare LLM and transformer
     llm = ChatOpenAI(model=llm_model, temperature=0.0)
@@ -24,10 +26,10 @@ async def ingest_text_to_neo4j(
     file_name = os.path.basename(text_file_path)
 
     documents = [Document(page_content=page.strip(), metadata={"source_file": file_name}) for page in pages if page.strip()]
-
+    print("Created documents from text file")
     # Convert to graph documents (async)
     graph_documents = await graph_transformer.aconvert_to_graph_documents(documents)
-    
+    print("Converted documents to graph documents")
     for gd in graph_documents:
         for node in gd.nodes:
             if hasattr(node, "properties"):
@@ -35,6 +37,7 @@ async def ingest_text_to_neo4j(
         for rel in gd.relationships:
             if hasattr(rel, "properties"):
                 rel.properties["source_file"] = file_name
+    print("Updated graph documents with source file metadata")
     # Store in Neo4j
     graph = Neo4jGraph(
         url=neo4j_uri,
