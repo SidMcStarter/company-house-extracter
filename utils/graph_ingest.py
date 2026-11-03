@@ -1,0 +1,81 @@
+from langchain_experimental.graph_transformers import LLMGraphTransformer
+from langchain_core.documents import Document
+from langchain_openai import ChatOpenAI
+from langchain_neo4j import Neo4jGraph
+import os
+from langchain_openai import OpenAIEmbeddings
+from langchain_neo4j import Neo4jVector
+async def ingest_text_to_neo4j(
+    text_file_path: str,
+    neo4j_uri: str = os.getenv("NEO4J_URI"),
+    neo4j_user: str = os.getenv("NEO4J_USER"),
+    neo4j_password: str = os.getenv("NEO4J_PASSWORD"),
+    llm_model: str = "gpt-4o-mini"
+):
+    # Read the document
+    with open(text_file_path, "r", encoding="utf-8") as f:
+        text = f.read()
+        
+    print("Entering ingest_text_to_neo4j function")
+
+    # Prepare LLM and transformer
+    llm = ChatOpenAI(model=llm_model, temperature=0.0)
+    graph_transformer = LLMGraphTransformer(llm=llm, node_properties=True)
+
+    pages = text.split("--- End of Page")
+    file_name = os.path.basename(text_file_path)
+
+    documents = [Document(page_content=page.strip(), metadata={"source_file": file_name}) for page in pages if page.strip()]
+    print("Created documents from text file")
+    # Convert to graph documents (async)
+    graph_documents = await graph_transformer.aconvert_to_graph_documents(documents)
+    print("Converted documents to graph documents")
+    for gd in graph_documents:
+        for node in gd.nodes:
+            if hasattr(node, "properties"):
+                node.properties["source_file"] = file_name  # or text_file_path
+        for rel in gd.relationships:
+            if hasattr(rel, "properties"):
+                rel.properties["source_file"] = file_name
+    print("Updated graph documents with source file metadata")
+    # Store in Neo4j
+    graph = Neo4jGraph(
+        url=neo4j_uri,
+        username=neo4j_user,
+        password=neo4j_password,
+        refresh_schema=True,
+    )
+    graph.add_graph_documents(graph_documents, baseEntityLabel=True, include_source=True)
+    
+    # Create embeddings and vector index
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    vector_index = Neo4jVector.from_existing_graph(
+        embeddings,
+        url=neo4j_uri,
+        username=neo4j_user,
+        password=neo4j_password,
+        node_label="Document",  # or your node label
+        text_node_properties=["text"],  # or your property name
+        embedding_node_property="embedding",
+    )
+    vector_index.add_documents(documents)
+    
+    return graph_documents
+
+if __name__ == "__main__":
+    import asyncio
+    import os
+    from dotenv import load_dotenv
+
+    # Load environment variables
+    load_dotenv()
+
+    NEO4J_URI = os.getenv("NEO4J_URI")
+    NEO4J_USER = os.getenv("NEO4J_USER")
+    NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
+
+    # Define the text file path
+    text_file_path = "01471587/shortened-filings-text/123_MTM4MzYzMjUxYWRpcXprY3g.txt"
+
+    # Run the ingestion
+    asyncio.run(ingest_text_to_neo4j(text_file_path, NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD))
